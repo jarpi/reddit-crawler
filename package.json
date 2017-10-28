@@ -4,8 +4,16 @@
   "description": "Another reddit crawler in NodeJs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node node_modules/mocha/bin/mocha spec/**/*.spec.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^4.0.1"
+  },
+  "devDependencies": {
+    "lodash": "^4.17.4"
+  }
 }
