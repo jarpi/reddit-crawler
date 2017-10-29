@@ -1,4 +1,5 @@
 const request = require('request')
+const fs = require('fs')
 let accessToken;
 
 const getProgrammingRedditPosts = () => {
@@ -29,7 +30,8 @@ const getMe = () => {
     return sendRequest(opts)
 }
 
-const getAccessToken = () => {
+const getAccessToken = ( token ) => {
+    if (token && token.accessToken) return Promise.resolve(token)
     const userName = process.env.BOT_USERNAME
     const pwd = process.env.BOT_USERPWD
     const grantType = 'password'
@@ -71,16 +73,44 @@ const sendRequest = ( opts ) => {
             }
             if (res.error) return reject(res)
             return resolve(res)
-
         })
     })
 }
 
-getAccessToken()
-    .then( token => {
-        accessToken = token.access_token;
-        return accessToken
+const readToken = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            const token = require('./.token.json')
+            if (!token && !token.access_token) throw new Error('readToken:invalid_format')
+            accessToken = token.access_token
+            return resolve()
+        } catch (e) {
+            return rebuildToken()
+                .then(() => {return resolve()})
+        }
     })
+}
+
+const rebuildToken = () => {
+    return getAccessToken()
+        .then(storeToken)
+        .then(token => {
+            accessToken = token.access_token
+            return
+        })
+}
+
+const storeToken = token => {
+    return new Promise((resolve, reject) => {
+        if (!token || !token.access_token) return reject('storeToken:invalid_token')
+        fs.writeFile('./.token.json', JSON.stringify(token), (err) => {
+            if (err) return reject(err)
+            return resolve(token)
+        })
+    })
+}
+
+readToken()
     .then(getMe)
     .then( res => {
         console.dir(res)
@@ -95,4 +125,3 @@ getAccessToken()
     })
 
 module.exports = getProgrammingRedditPosts
-
