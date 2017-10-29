@@ -5,43 +5,28 @@ const getProgrammingRedditPosts = () => {
     const apiUrl = 'https://oauth.reddit.com'
     const path = '/r/programming.json?limit=1'
     const userAgent ='Linux/UbuntuX64:reddit_nodejs_bot:v0.1 (by /u/jarpidev)'
-    return new Promise((resolve, reject) => {
-        request.get({
-            'url': apiUrl + path,
-            'headers': {
-                'User-Agent': userAgent,
-                'Authorization' : 'Bearer ' + accessToken
-            }
-        }, (error, response, body) => {
-            if (error) return reject(error)
-            const res = JSON.parse(body)
-            if (res.error) return reject(res)
-            return resolve(res)
-        })
-
-    })
-
+    const opts = {
+        'method': 'get',
+        'url': apiUrl + path,
+        'headers': {
+            'Authorization' : 'Bearer ' + accessToken
+        }
+    }
+    return sendRequest(opts)
 }
 
 const getMe = () => {
     const apiUrl = 'https://oauth.reddit.com'
     const path = '/api/v1/me'
     const userAgent ='Linux/UbuntuX64:reddit_nodejs_bot:v0.1 (by /u/jarpidev)'
-    return new Promise((resolve, reject) => {
-        request.get({
-            'url': apiUrl + path,
-            'headers': {
-                'User-Agent': userAgent,
-                'Authorization' : 'Bearer ' + accessToken
-            }
-        }, (error, response, body) => {
-            if (error) return reject(error)
-            const res = JSON.parse(body)
-            if (res.error) return reject(res)
-            return resolve(res)
-        })
-
-    })
+    const opts = {
+        'method': 'get',
+        'url': apiUrl + path,
+        'headers': {
+            'Authorization' : 'Bearer ' + accessToken
+        }
+    }
+    return sendRequest(opts)
 }
 
 const getAccessToken = () => {
@@ -51,33 +36,45 @@ const getAccessToken = () => {
     const clientId = process.env.BOT_CLIENTID
     const secret = process.env.BOT_SECRET
     const apiUrl = 'https://www.reddit.com/api/v1/access_token'
+
+    const opts = {
+        'method': 'post',
+        'auth': {
+            'user': clientId,
+            'password': secret
+        },
+        'url': apiUrl,
+        'form': {
+            'grant_type': grantType,
+            'username': userName,
+            'password': pwd
+
+        }
+    }
+
+    return sendRequest(opts)
+}
+
+const sendRequest = ( opts ) => {
     const userAgent ='Linux/UbuntuX64:reddit_nodejs_bot:v0.1 (by /u/jarpidev)'
+    if (!opts.headers) opts.headers = {}
+    opts.headers['User-Agent'] = userAgent
 
-    return new Promise((resolve, reject) => {
-        request.post({
-            'auth': {
-                'user': clientId,
-                'password': secret
-            },
-            'url': apiUrl,
-            'form': {
-                'grant_type': grantType,
-                'username': userName,
-                'password': pwd
-
-            },
-            'headers': {
-                'User-Agent': userAgent
-            }
-        }, (error, response, body) => {
+    return new Promise((resolve, reject) =>{
+        request(opts, (error, response, body) => {
             if (error) return reject(error)
-            const res = JSON.parse(body)
+            let res;
+            try {
+                res = JSON.parse(body)
+            } catch (e) {
+                return reject(e)
+            }
             if (res.error) return reject(res)
             return resolve(res)
+
         })
     })
 }
-
 
 getAccessToken()
     .then( token => {
