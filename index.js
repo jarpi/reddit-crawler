@@ -20,14 +20,14 @@ const getProgPosts = (after) => {
 }
 
 const getDataUpToDate = (after,acc) => {
-  const data = acc || []
+  let data = acc || []
   const targetDate  = Date.parse('September 21, 2017')
   getProgPosts(after)
   .then( res => {
     const dataLength = res.data.children.length
     const lastDate = res.data.children[dataLength-1].data.created*1000
     console.dir(new Date(lastDate))
-    data.push(parser(res, ['data', 'children', 'data', 'domain']))
+    data = parser(res, ['data', 'children', 'data', 'domain'], data)
     console.dir(data)
     if (lastDate>targetDate && res.data.after !== null) getDataUpToDate(res.data.after, data)
   })
