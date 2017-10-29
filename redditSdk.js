@@ -2,13 +2,17 @@ const request = require('request')
 const fs = require('fs')
 let accessToken;
 
-const getProgrammingRedditPosts = () => {
+const getProgrammingRedditPosts = (queryParams) => {
     const apiUrl = 'https://oauth.reddit.com'
-    const path = '/r/programming.json?limit=1'
+    const path = '/r/programming.json'
+    const pathOpts = Object.keys(queryParams).reduce((prev, curr) => {
+        prev += curr + '=' + queryParams[curr]
+        return prev
+    }, '?')
     const userAgent ='Linux/UbuntuX64:reddit_nodejs_bot:v0.1 (by /u/jarpidev)'
     const opts = {
         'method': 'get',
-        'url': apiUrl + path,
+        'url': apiUrl + path + pathOpts,
         'headers': {
             'Authorization' : 'Bearer ' + accessToken
         }
@@ -80,10 +84,13 @@ const sendRequest = ( opts ) => {
 const readToken = () => {
     return new Promise((resolve, reject) => {
         try {
-            const token = require('./.token.json')
-            if (!token && !token.access_token) throw new Error('readToken:invalid_format')
-            accessToken = token.access_token
-            return resolve()
+            fs.readFile('./.token.json', (err, data) =>{
+                if (err) throw new Error('readToken:cannot_read_file')
+                const token = JSON.parse(data)
+                if (!token && !token.access_token) throw new Error('readToken:invalid_format')
+                accessToken = token.access_token
+                return resolve()
+            })
         } catch (e) {
             return rebuildToken()
                 .then(() => {return resolve()})
@@ -110,18 +117,32 @@ const storeToken = token => {
     })
 }
 
-readToken()
-    .then(getMe)
-    .then( res => {
-        console.dir(res)
-    })
-    .then(getProgrammingRedditPosts)
-    .then( res => {
-        console.dir(res)
-    })
-    .catch( err => {
-        console.log('error')
-        console.dir(err)
-    })
+const getProgPosts = () => {
+    readToken()
+        .then(getMe)
+        .then( res => {
+            console.dir(res)
+            return
+        })
+        .then(() => {
+            const queryParams = {'limit': 1}
+            return getProgrammingRedditPosts(queryParams)
+        })
+        .then( res => {
+            console.dir(res)
+            return
+        })
+        .catch( err => {
+            if (err.error === 401) {
+                return rebuildToken()
+                    .then(getProgPosts)
+            }
+            console.log('error')
+            console.dir(err)
+        })
+
+}
+
+getProgPosts()
 
 module.exports = getProgrammingRedditPosts
