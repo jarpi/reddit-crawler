@@ -9,7 +9,6 @@ const getProgPosts = (after) => {
 			console.log('error')
 			console.dir(err)
 		})
-
 }
 
 const buildUniqueDomainsArrByDate = (after,acc) => {
