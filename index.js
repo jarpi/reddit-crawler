@@ -5,7 +5,6 @@ const opts = {
     clientSecret: process.env.BOT_SECRET
   }
 const redditClient = require('reddit-js-sdk')(opts)
-console.dir(redditClient)
 const parser = require('./lib/DataParser.js')
 
 const getProgPosts = (after) => {
