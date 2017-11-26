@@ -18,7 +18,6 @@ const buildUniqueDomainsArrByDate = (after,acc) => {
 		.then( res => {
 			const dataLength = res.data.children.length
 			const lastDate = res.data.children[dataLength-1].data.created*1000
-			// console.dir(new Date(lastDate))
 			data = parser(res, ['data', 'children', 'data', 'domain'], data)
 			if (lastDate>targetDate && res.data.after !== null) return buildUniqueDomainsArrByDate(res.data.after, data)
 			return data
